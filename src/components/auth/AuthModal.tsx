@@ -92,8 +92,10 @@ export default function AuthModal({
   }
 
   function handleGoogleLogin() {
-    alert("Google Sign-In is currently not configured in development mode. Please use email and password.");
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    window.location.href = `${backendUrl}/auth/google`;
   }
+
 
   return (
     <div
