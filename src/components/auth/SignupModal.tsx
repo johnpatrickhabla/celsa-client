@@ -47,7 +47,7 @@ export default function SignupModal({
   }
 
   function handleGoogleSignup() {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://celsa-server.onrender.com/api";
     window.location.href = `${backendUrl}/auth/google`;
   }
 
