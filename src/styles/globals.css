@@ -1,0 +1,191 @@
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+@import "./adminlte.min.css";
+
+:root {
+  /* Brand tokens taken from the approved Celsa Handicrafts mockup */
+  --celsa-cream: #f3ecdc;
+  --celsa-gold: #b8863b;
+  --celsa-gold-dark: #8a6529;
+  --celsa-green-dark: #1f3320; /* Admin sidebar */
+  --celsa-green-darker: #16241a;
+  --celsa-brown: #6b3a20; /* Staff sidebar */
+  --celsa-brown-dark: #4d2916;
+  --celsa-text: #2b2b26;
+  --celsa-muted: #7a7568;
+  --celsa-border: #e7e0cf;
+}
+
+body {
+  color: var(--celsa-text);
+  background-color: #ffffff;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.celsa-topbar {
+  background-color: var(--celsa-cream);
+  border-bottom: 1px solid var(--celsa-border);
+}
+
+.celsa-navbar {
+  background-color: var(--celsa-cream);
+  border-bottom: 1px solid var(--celsa-border);
+}
+
+.celsa-logo-mark {
+  color: var(--celsa-gold-dark);
+}
+
+/* ---- Admin portal ---- */
+.celsa-sidebar-admin {
+  background-color: var(--celsa-green-dark);
+  min-height: 100vh;
+  color: #e9efe9;
+}
+.celsa-sidebar-admin .nav-link {
+  color: #cfe0cf;
+  border-radius: 0.4rem;
+}
+.celsa-sidebar-admin .nav-link.active,
+.celsa-sidebar-admin .nav-link:hover {
+  background-color: var(--celsa-green-darker);
+  color: #ffffff;
+}
+
+/* ---- Staff portal ---- */
+.celsa-sidebar-staff {
+  background-color: var(--celsa-brown);
+  min-height: 100vh;
+  color: #f2e6dc;
+}
+.celsa-sidebar-staff .nav-link {
+  color: #eaded3;
+  border-radius: 0.4rem;
+}
+.celsa-sidebar-staff .nav-link.active,
+.celsa-sidebar-staff .nav-link:hover {
+  background-color: var(--celsa-brown-dark);
+  color: #ffffff;
+}
+
+/* ---- Shared dashboard bits ---- */
+.celsa-stat-card {
+  border: 1px solid var(--celsa-border);
+  border-radius: 0.6rem;
+}
+.celsa-badge-pending {
+  background-color: #f4e2b8;
+  color: #7a5a12;
+}
+.celsa-badge-progress {
+  background-color: #d9e6f2;
+  color: #234b73;
+}
+.celsa-badge-completed {
+  background-color: #d7ead9;
+  color: #245a2c;
+}
+
+/* Product Cards Styling */
+.product-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  background-color: #ffffff;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06) !important;
+  border-color: var(--celsa-gold) !important;
+}
+.product-image {
+  background-color: #f8f9fa;
+  overflow: hidden;
+}
+.product-image img {
+  transition: transform 0.3s ease;
+}
+.product-card:hover .product-image img {
+  transform: scale(1.04);
+}
+.product-title {
+  transition: color 0.2s ease;
+}
+.product-card:hover .product-title {
+  color: var(--celsa-gold-dark) !important;
+}
+
+/* Disable browser native password reveal & clear buttons (e.g. Edge / Chromium) */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* ---- Loading skeletons ---- */
+.celsa-loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
+}
+
+.celsa-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--celsa-border);
+  border-top-color: var(--celsa-gold);
+  border-radius: 50%;
+  animation: celsa-spin 0.7s linear infinite;
+}
+
+@keyframes celsa-spin {
+  to { transform: rotate(360deg); }
+}
+
+.celsa-loading-text {
+  color: var(--celsa-muted);
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+}
+
+.celsa-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--celsa-border) 25%,
+    #ede7d6 50%,
+    var(--celsa-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: celsa-shimmer 1.4s ease-in-out infinite;
+  border-radius: 0.4rem;
+}
+
+@keyframes celsa-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.celsa-skeleton-line {
+  height: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.celsa-skeleton-title {
+  height: 1.5rem;
+  width: 40%;
+  margin-bottom: 1rem;
+}
+
+.celsa-skeleton-card {
+  height: 120px;
+  border-radius: 0.6rem;
+}
+
+.celsa-skeleton-row {
+  height: 2.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.3rem;
+}
+

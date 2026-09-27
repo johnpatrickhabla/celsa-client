@@ -1,0 +1,406 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useAuthStore } from "@/stores/authStore";
+import api from "@/lib/api";
+
+interface AuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialTab?: "login" | "signup" | "forgot";
+  onSuccess?: () => void;
+}
+
+export default function AuthModal({
+  isOpen,
+  onClose,
+  initialTab = "login",
+  onSuccess,
+}: AuthModalProps) {
+  const { login, signup } = useAuthStore();
+  const [tab, setTab] = useState<"login" | "signup" | "forgot">(initialTab);
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTab(initialTab);
+    setError(null);
+    setSuccessMsg(null);
+    setShowPassword(false);
+  }, [initialTab, isOpen]);
+
+  if (!isOpen) return null;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccessMsg(null);
+
+    try {
+      if (tab === "login") {
+        await login(email, password);
+      } else if (tab === "signup") {
+        await signup(name, email, password);
+      }
+      setLoading(false);
+      const user = useAuthStore.getState().user;
+      if (user?.role === "admin") {
+        window.location.href = "/admin/dashboard";
+        return;
+      }
+      if (user?.role === "staff") {
+        window.location.href = "/staff/dashboard";
+        return;
+      }
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
+    } catch (err: any) {
+      setLoading(false);
+      const msg =
+        err.response?.data?.details?.[0]?.message ||
+        err.response?.data?.error ||
+        (tab === "login" ? "Invalid email or password." : "Could not create account. Please try again.");
+      setError(msg);
+    }
+  }
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccessMsg(null);
+
+    try {
+      const res = await api.post("/auth/forgot-password", { email });
+      setSuccessMsg(res.data.message || "A password reset link has been dispatched to your email.");
+      setLoading(false);
+    } catch (err: any) {
+      setLoading(false);
+      const msg = err.response?.data?.error || "Could not process request. Please verify your email.";
+      setError(msg);
+    }
+  }
+
+  function handleGoogleLogin() {
+    alert("Google Sign-In is currently not configured in development mode. Please use email and password.");
+  }
+
+  return (
+    <div
+      className="modal fade show d-block bg-black bg-opacity-50"
+      tabIndex={-1}
+      style={{ zIndex: 1060 }}
+    >
+      <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 430 }}>
+        <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+          {/* Header */}
+          <div className="modal-header border-0 pb-0 pt-4 px-4 d-flex flex-column align-items-stretch">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <div className="d-flex align-items-center gap-2">
+                <i className="bi bi-flower1 fs-3 text-warning" />
+                <div>
+                  <h5 className="fw-bold text-dark mb-0">CELSA Handicrafts</h5>
+                  <small className="text-muted" style={{ fontSize: "0.7rem" }}>
+                    {tab === "login"
+                      ? "Welcome back! Log in to your account"
+                      : tab === "signup"
+                      ? "Create your customer account"
+                      : "Recover account access"}
+                  </small>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={onClose}
+                aria-label="Close"
+                title="Close"
+              />
+            </div>
+
+            {/* Tab Pill Switcher */}
+            <div className="nav nav-pills nav-fill bg-light p-1 rounded-3 border">
+              <button
+                type="button"
+                className={`nav-link rounded-2 py-2 small fw-semibold transition-all ${
+                  tab === "login" ? "active bg-success text-white shadow-sm" : "text-dark"
+                }`}
+                onClick={() => {
+                  setTab("login");
+                  setError(null);
+                  setSuccessMsg(null);
+                }}
+              >
+                Log In
+              </button>
+              <button
+                type="button"
+                className={`nav-link rounded-2 py-2 small fw-semibold transition-all ${
+                  tab === "signup" ? "active bg-success text-white shadow-sm" : "text-dark"
+                }`}
+                onClick={() => {
+                  setTab("signup");
+                  setError(null);
+                  setSuccessMsg(null);
+                }}
+              >
+                Create Account
+              </button>
+            </div>
+          </div>
+
+          {/* Form Body */}
+          <div className="modal-body p-4">
+            {tab === "forgot" ? (
+              /* Forgot Password View */
+              <div>
+                <div className="text-center mb-3">
+                  <div
+                    className="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-2"
+                    style={{ width: 44, height: 44 }}
+                  >
+                    <i className="bi bi-shield-lock-fill fs-4" />
+                  </div>
+                  <h6 className="fw-bold text-dark mb-1">Forgot Your Password?</h6>
+                  <p className="text-muted small mb-0">
+                    Enter your email address and we&apos;ll send you password recovery instructions.
+                  </p>
+                </div>
+
+                {successMsg && (
+                  <div className="alert alert-success py-2 px-3 small rounded-3 mb-3">
+                    <i className="bi bi-check-circle-fill me-1" />
+                    {successMsg}
+                  </div>
+                )}
+
+                {error && (
+                  <div className="alert alert-danger py-2 px-3 small rounded-3 mb-3">
+                    <i className="bi bi-exclamation-circle me-1" />
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleForgotPassword} autoComplete="off">
+                  <div className="mb-3">
+                    <label className="form-label small fw-semibold text-dark">Registered Email</label>
+                    <input
+                      type="email"
+                      className="form-control rounded-3"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="off"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-success w-100 rounded-3 py-2 fw-bold shadow-sm"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" />
+                        Sending reset instructions…
+                      </>
+                    ) : (
+                      "Send Reset Instructions"
+                    )}
+                  </button>
+                </form>
+              </div>
+            ) : (
+              /* Login & Signup Form Views */
+              <div>
+                {/* Google Option */}
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-2 mb-3 bg-white"
+                  onClick={handleGoogleLogin}
+                  style={{ borderColor: "#dadce0" }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    />
+                  </svg>
+                  <span className="fw-semibold text-dark small">
+                    {tab === "login" ? "Continue with Google" : "Sign Up with Google"}
+                  </span>
+                </button>
+
+                <div className="d-flex align-items-center my-3">
+                  <hr className="flex-grow-1 my-0 text-muted opacity-25" />
+                  <span className="px-2 text-muted small" style={{ fontSize: "0.7rem" }}>
+                    OR EMAIL
+                  </span>
+                  <hr className="flex-grow-1 my-0 text-muted opacity-25" />
+                </div>
+
+                {error && (
+                  <div className="alert alert-danger py-2 px-3 small rounded-3 mb-3">
+                    <i className="bi bi-exclamation-circle me-1" />
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} autoComplete="off">
+                  {tab === "signup" && (
+                    <div className="mb-3">
+                      <label className="form-label small fw-semibold text-dark">Full Name</label>
+                      <input
+                        type="text"
+                        className="form-control rounded-3"
+                        placeholder="Juan Dela Cruz"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        autoComplete="off"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  <div className="mb-3">
+                    <label className="form-label small fw-semibold text-dark">Email Address</label>
+                    <input
+                      type="email"
+                      className="form-control rounded-3"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="off"
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <label className="form-label small fw-semibold text-dark mb-0">Password</label>
+                      {tab === "login" && (
+                        <button
+                          type="button"
+                          className="btn btn-link p-0 text-success text-decoration-none small"
+                          style={{ fontSize: "0.75rem" }}
+                          onClick={() => {
+                            setTab("forgot");
+                            setError(null);
+                            setSuccessMsg(null);
+                          }}
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </div>
+                    <div className="input-group">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        className="form-control rounded-start-3"
+                        placeholder={tab === "signup" ? "At least 8 characters" : "Enter your password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        autoComplete="new-password"
+                        required
+                        minLength={tab === "signup" ? 8 : 1}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary rounded-end-3 px-3 bg-white border-start-0 d-flex align-items-center justify-content-center"
+                        style={{ borderColor: "#dee2e6" }}
+                        onClick={() => setShowPassword(!showPassword)}
+                        title={showPassword ? "Hide password" : "Show password"}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        <i className={`bi ${showPassword ? "bi-eye-slash text-secondary" : "bi-eye text-muted"} fs-6`} />
+                      </button>
+                    </div>
+                    {tab === "signup" && (
+                      <div className="form-text" style={{ fontSize: "0.7rem" }}>
+                        Must be at least 8 characters long.
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-success w-100 rounded-3 py-2 fw-bold shadow-sm"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" />
+                        {tab === "login" ? "Logging in…" : "Creating Account…"}
+                      </>
+                    ) : (
+                      <>{tab === "login" ? "Log In" : "Create Account"}</>
+                    )}
+                  </button>
+                </form>
+
+                <div className="text-center mt-3 pt-2 border-top">
+                  <small className="text-muted">
+                    {tab === "login" ? (
+                      <>
+                        Don&apos;t have an account?{" "}
+                        <button
+                          type="button"
+                          className="btn btn-link p-0 text-success fw-semibold text-decoration-none small ms-1"
+                          onClick={() => {
+                            setTab("signup");
+                            setError(null);
+                            setSuccessMsg(null);
+                          }}
+                        >
+                          Sign up here
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        Already have an account?{" "}
+                        <button
+                          type="button"
+                          className="btn btn-link p-0 text-success fw-semibold text-decoration-none small ms-1"
+                          onClick={() => {
+                            setTab("login");
+                            setError(null);
+                            setSuccessMsg(null);
+                          }}
+                        >
+                          Log in here
+                        </button>
+                      </>
+                    )}
+                  </small>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
